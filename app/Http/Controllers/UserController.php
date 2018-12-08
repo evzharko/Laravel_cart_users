@@ -13,9 +13,14 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $name = $request->get('name');
+        /** @var \Illuminate\Contracts\Pagination\LengthAwarePaginator $users */
+        $users = User::query()
+            ->where('name','like','%'.$name.'%')
+            ->paginate(2); // Все строки
+        $users->appends(['name'=>$name]);
         return view('user.index', ['users' => $users]);
     }
 
@@ -26,7 +31,7 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
-        return view('user.edit');
+        return view('user.edit'); // Возвращаемся на редактирование
     }
 
     /**
@@ -38,7 +43,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
-        $id = $request->get('id');
+        $id = $request->get('id'); // Айди с формы
         if ($id) {
             $user = User::find($id);
         } else {
@@ -49,7 +54,7 @@ class UserController extends Controller
         $user->name = $request->get('name');
         $user->email = $request->get('email');
         $user->save();
-        return redirect(route('user.edit', ['user' => $user->id]));
+        return redirect(route('user.edit', ['user' => $user->id]))->with(['status'=>'Новый пользователь создан']);
     }
 
     /**
@@ -87,6 +92,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
+        /** @var User $user */
         $user = User::find($id);
         $user->name = $request->get('name');
         $user->email = $request->get('email');
